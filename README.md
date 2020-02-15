@@ -22,3 +22,4 @@
 * [Домашние задания](contests.md)
 * [Стайл-гайды](style-guide.md)
 * [Окружение](environment.md)
+* [Семинарские тесты](tests.md)
