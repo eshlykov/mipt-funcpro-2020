@@ -50,7 +50,7 @@ let minusFour1 = unaryMinus four
 let minusFour2 = unaryMinus (plus 1 3)
 
 // Операторы - тоже функции. Их можно переписать в виде обычной функции:
-printfn "%A" (( + ) 1 3)
+printfn "%A" (( * ) 1 3)
 
 // -----------------------------------------------------------------------------
 // ВЫВОД В КОНСОЛЬ
@@ -126,7 +126,7 @@ let _, second, _ = tuple3 // Распаковка значений с отбра
 // и не содержать. Объект опционального типа 'T option, содержащий значение x
 // типа 'T, обозначаетcя Some x, а объект типа 'T option, не содержаший
 // никакого значения - None.
-let optionalEmpty : int option  = None
+let optionalEmpty : int option = None
 let optionalNotEmpty = Some 5
 printfn "%A" optionalEmpty
 printfn "%A" optionalNotEmpty
@@ -145,14 +145,15 @@ printfn "%A" optionalEmpty.IsSome
 
 // Списки определяются, используя квадратный скобки
 // Внутри через ; перечисляются элементы
-let emptyList = []
-let listOf123 = [ 1; 2; 3; ]
+let emptyList = [] : int list
+let listOf123 = [ 1; 2; 3 ]
 let listOf123Multiline = [
     1
     2
     3
 ]
 printfn "%A\n%A\n%A" emptyList listOf123 listOf123Multiline
+printfn "%A" (listOf123 = listOf123Multiline)
 
 // Еше один способ - используя конструктор списков
 printfn "%A" (1 :: 2 :: 3 :: [])
@@ -161,6 +162,10 @@ printfn "%A" (1 :: 2 :: 3 :: [])
 let range = [ 1 .. 10 ]
 let rangeEmpty = [ 10 .. 1 ]
 printfn "%A\n%A" range rangeEmpty
+
+// Можно указывать шаг, причем в середине
+let evenDesc = [ 10 .. -2 .. 1 ]
+printfn "%A" evenDesc
 
 // Наконец, списки можно задавать генераторами, комбинируя цикл for и yield
 let squares = [ for i in 1 .. 10 do yield i * i ]
@@ -321,14 +326,22 @@ let rec sumFirstTwoOpt list =
 // элемент сорпоставляется с частью до первой запятой, второй - между первой и
 // второй и так далее, разумеется, с учетом вложенных образцов
 
+// При сопоставлении с образцом нет возможности делать сравнения: следующая
+// функция всегда вернет true
+let compare x y =
+    match y with
+    | x -> true
+    | _ -> false
+
 // Теперь, использя условные выражения, рекурсию и сопоставление с образцом,
 // напишем быструю сортировку списка
 let rec quickSort list =
     match list with
     | [] -> []
-    | _ -> let left = [ for x in list do if x < (List.head list) then yield x ]
-           let right = [ for x in list do if x > (List.head list) then yield x ]
-           (quickSort left) @ ((List.head list) :: (quickSort right))
+    | _ ->
+        let left = [ for x in list do if x < (List.head list) then yield x ]
+        let right = [ for x in list do if x > (List.head list) then yield x ]
+        (quickSort left) @ ((List.head list) :: (quickSort right))
 
 printfn "%A" (quickSort [ 10; 5; 3; 7; 4; 2; 1 ])
 
@@ -362,7 +375,7 @@ printfn "%A" (pushBackEvenAndPushFrontOdd [ 1; 2 ] 2)
 // ФУНКЦИИ ВЫСШИХ ПОРЯДКОВ
 
 // Функция, которая принимает на вход другую функцию, называется функцией
-// высшего порядка/ Такие функции нужны чаще всего для обработки структур данных
+// высшего порядка. Такие функции нужны чаще всего для обработки структур данных
 // или некоторых проверок
 
 // Основных функций для работы со списками три
