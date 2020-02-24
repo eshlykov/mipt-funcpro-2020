@@ -15,3 +15,4 @@
 ## Ссылки на контесты
 
 * https://www.hackerrank.com/mipt-funcpro-2020-contest-01 — до 28.02, 23:59
+* https://www.hackerrank.com/mipt-funcpro-2020-contest-02 — до 06.03, 23:59
