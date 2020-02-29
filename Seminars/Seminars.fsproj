@@ -46,6 +46,7 @@
         <Compile Include="Program.fs" />
         <Content Include="packages.config" />
         <None Include="Seminar02.fsx" />
+        <None Include="Seminar03.fsx" />
     </ItemGroup>
     <Import Project="$(FSharpTargetsPath)" Condition="Exists('$(FSharpTargetsPath)')" />
 </Project>
