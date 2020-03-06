@@ -48,7 +48,9 @@ type IntWrapper = IntWrapper of int
 // алиасов, int и IntWrapper - разные типы
 let wrappedInt : IntWrapper = IntWrapper 2902
 // По сути для конструкции type <TypeName> = <CtorName> of <Type> конструктор -
-// это функция <CtorName> : <Type> -> <TypeName>
+// это функция <CtorName> : <Type> -> <TypeName>. Преобразование типа в int
+// работать не будет:
+// let sourceInt : int = int wrappedInt // Не работает
 
 // В качестве типа можно брать любой имеющийся тип, например, кортеж
 type TupleWrapper = TupleWrapper of int * string
@@ -115,6 +117,9 @@ type 't Tree =
 | Leaf of 't
 | Node of 't Tree * 't Tree
 
+// Создаем дерево
+let tree = Node (Node (Leaf 1, Node (Leaf 0, Leaf 5)), Leaf 4)
+
 // Посчитаем теперь высоту и размер дерева
 let rec height = function
 | Leaf _ -> 0
@@ -129,13 +134,16 @@ let rec size = function
 type Loop = Loop of Loop // Корректное объявление типа
 // let loop : Loop = Loop <| Loop <| ... // Объявить значение невозможно
 
+// Как получить значение
+let rec loop () : Loop = Loop <| loop ()
+
 // Более того, типы могут быть взаимно-рекурсивными, то есть можно объявить
 // сразу несколько типов, каждый из которых использует другой тип. Синтаксически
 // зависимость между типами обозначается словом and вместо type у второго типа
 type 't Cell' =
 | NilCell'
 | ConsCell' of 't * 't Stream' 
-and 't Stream' = 't Cell'
+and 'u Stream' = 'u Cell'
 // Заметье, что в этом примере второй тип - это всего лишь алиас, но в общем
 // случае он может быть намного сложнее
 
@@ -185,8 +193,8 @@ printfn "%A" <| length (Cons' (4, Cons' (3, Cons' (2, Cons' (1, Nil')))))
 // Тем не менее, в F# есть механизм, позволяющий выполнять вычисления лениво.
 // Для этого используется тип Lazy<'t>, объекты которого можно создать с помощью
 // ключевого слова lazy
-let lazyFour : int Lazy = lazy 4
-let lazy2Plus2 : int Lazy = lazy (2 + 2)
+let lazyFour : Lazy<int> = lazy 4
+let lazy2Plus2 : Lazy<int> = lazy (2 + 2)
 // На всякий случай: Lazy не алгебраический тип данных, а lazy не конструктор
 
 // Внутри себя объект типа Lazy<'t> содержит значение типа 't в некоторой
@@ -213,11 +221,11 @@ let lazySeq : int Stream = lazy (ConsCell (1, lazy NilCell))
 
 // Чтобы с ними работать, нужно каждый раз форсировать вычисление. Например,
 // конкатенация таких последовательностей
-let rec concat (xs : 't Stream) (ys : 't Stream) =
+let rec concat (xs : 't Stream) (ys : 't Stream) : 't Stream =
     match xs.Force () with
     | NilCell -> ys
     | ConsCell (x, zs) -> lazy (ConsCell (x, concat zs ys))
-    
+
 // -----------------------------------------------------------------------------
 // ЛЕНИВЫЕ ПОСЛЕДОВАТЕЛЬНОСТИ
     
@@ -232,7 +240,7 @@ let rec concat (xs : 't Stream) (ys : 't Stream) =
 // последовательности могут быть эффективнее списков, когда используются не все
 // элементы
 
-// Обозначается этот тип 't seq. Он полиморфный Функция для работы с
+// Обозначается этот тип 't seq. Он полиморфный. Функция для работы с
 // последовательностями лежат в модуле Seq
 let empty = Seq.empty
 let ten = seq { 1 .. 10 }
@@ -246,7 +254,7 @@ let seq123Yield = seq {
 }
 let forYield = seq { for i in 1 .. 10 do yield i * i }
 let forArrow = seq { for i in 1 .. 10 -> i * i }
-let evenNumbers = Seq.init 1001 (fun n -> n * 2)
+let evenNumbers = Seq.init 1000000001 (fun n -> n * 2)
 
 // В целом, здесь все то же самое, что и со списками, только вместо квадратных
 // скобок фигурные. Новая возможность - это встроить последовательность в другую
@@ -316,7 +324,7 @@ printfn "%A" <| (Seq.take 10 thisFile |> List.ofSeq)
 let rec nats = seq {
     yield 0
     yield! Seq.map (( + ) 1 ) nats
-} // Обратите внимание: рекурсивная константа. Выдаетсяя предупреждение
+} // Обратите внимание: рекурсивная константа. Выдается предупреждение
 printfn "%A" <| List.ofSeq (Seq.take 10 nats)
 
 // Рекурсия здесь выглядела бы так
@@ -343,12 +351,11 @@ let rec nats' = function
 // эффективно из-за большого стека. Самое неприятное, что даже для простых
 // вещей, которые в императивном программированию делаются циклами, в
 // функциональном приходится использовать рекурсию, а значит, возникает расход
-// памяти. Рассмотрим, например,
-// функцию вычисления длины списка
+// памяти. Рассмотрим, например, функцию вычисления длины списка
 let rec length' = function
 | [] -> 0
 | _ :: xs -> 1 + (length' xs)
-    
+
 // На каждом уровне рекурсии потребуется хранить адрес возврата, аргументы и
 // возвращаемый результат, то есть всего нужно хранить O(n) ячеек памяти. А на
 // императивном языке программирования можно обойтись константой, написав цикл
@@ -360,7 +367,7 @@ let rec length' = function
 
 // В функции length' после рекурсивного вызова применяется оператор ( + ),
 // поэтому она не хвосто-рекурсивная. Вот исправленная версия
-let rec lengthTailRec list =
+let lengthTailRec list =
     let rec length' acc = function
     | [] -> acc
     | _ :: xs -> length' (acc + 1) xs
