@@ -48,6 +48,7 @@
         <None Include="Seminar02.fsx" />
         <None Include="Seminar03.fsx" />
         <None Include="Seminar04.fsx" />
+        <None Include="Seminar05.fsx" />
     </ItemGroup>
     <Import Project="$(FSharpTargetsPath)" Condition="Exists('$(FSharpTargetsPath)')" />
 </Project>
