@@ -12,10 +12,10 @@
 // В скобках аргументы конструктора. Скобки обязательны, список может быть пуст
 type User (name) =
     // Внутри методы и поля
-    member this.SayHi () = printfn "Hi, I am %s!" name
+    member this.SayHi () = printfn "Hi, I'm %s!" this.Name
     member this.Name = name
     // Слово this - это идентификатор текущего объекта класса (нужен, когда
-    // объект взаимодействует с другими объектами того же типа)
+    // объект взаимодействует с другими объектами того же типа).
     // При определении класса это может быть любое слово, в том числе даже
     // разные для разных методов и полей
 
@@ -67,7 +67,7 @@ type ComputationType () =
     
 // Для записи вычислительного выражения нужно создать объект, в котором
 // будут производится вычисления
-let builderExpr : ComputationType = new ComputationType ()
+let builderExpr : ComputationType = ComputationType ()
 
 // Дальше нам доступен такой синтаксис
 let computationExpression : int ExpressionType = builderExpr {
@@ -131,39 +131,55 @@ let rec toList = function
 | Nil -> []
 | Cons (x, xs) -> x :: toList xs
 
+let rec map f xs =
+    lazy match xs with
+         | Nil -> NilCell
+         | Cons (x, xs) -> ConsCell (f x, map f xs)
+
+let rec zip xs ys =
+    lazy match xs, ys with
+         | Cons (x, xs'), Cons (y, ys') -> ConsCell ((x, y), zip xs' ys')
+         | _ -> NilCell
+
+let rec tail xs =
+    lazy match xs with
+         | Nil -> NilCell
+         | Cons (_, xs) -> xs.Force ()
+
 let rec take n xs =
-    match n, xs with
-    | 0, _ -> lazy NilCell
-    | _, Nil -> lazy NilCell
-    | _, Cons (x, xs') -> lazy ConsCell (x, take (n - 1) xs')
+    lazy match n, xs with
+         | 0, _ -> NilCell
+         | _, Nil -> NilCell
+         | _, Cons (x, xs') -> ConsCell (x, take (n - 1) xs')
 
 type SequenceBuilder () =
     // 't -> 't Stream для yield
-    member this.Yield x = lazy ConsCell (x, lazy NilCell) : 't Stream
+    member this.Yield x =
+        lazy ConsCell (x, lazy NilCell) : 't Stream
     
     // 't Stream -> 't Stream для yield!
-    member this.YieldFrom xs = xs : 't Stream
+    member this.YieldFrom xs =
+        xs : 't Stream
     
     // 't Stream * 't Stream -> 't Stream
     member this.Combine (streams : 't Stream * 't Stream ) =
-        match fst streams with
-        | Nil -> snd streams
-        | Cons (x, xs) -> lazy ConsCell (x, this.Combine (xs, snd streams))
+        lazy match fst streams with
+             | Nil -> (snd streams).Force()
+             | Cons (x, xs) -> ConsCell (x, this.Combine (xs, snd streams))
     
     // (unit -> 't Stream) -> 't Stream
     member this.Delay (getStream : unit -> 't Stream) =
         lazy ((getStream ()).Force())
-        
+
 let sequence = SequenceBuilder ()
 
-let fibs' =
-    let rec fibs' a b = sequence {
-        yield b
-        yield! fibs' b (a + b)
-    }
-    sequence { yield 0; yield! fibs' 0 1 }
+let rec fibs'' : int Stream = sequence {
+    yield 0
+    yield 1
+    yield! fibs'' |> tail |> zip fibs'' |> map (function (a, b) -> a + b)
+}
 
-printfn "%A" (fibs' |> take 10 |> toList)
+printfn "%A" (fibs'' |> take 10 |> toList)
 
 // -----------------------------------------------------------------------------
 // АСИНХРОННОСТЬ
@@ -185,8 +201,8 @@ let asyncPrint = async { return printfn "print" }
 
 // Функции для работы с асинхронными вычислениями живут в модуле Async
 
-// RunSynchronously : 't Async -> 't - функция запускает вычисление в текущем
-// потоке и возвращает результат вычисления
+// RunSynchronously : 't Async -> 't - функция запускает вычисление в фоновом
+// потоке, дожидается его окончания и возвращает результат
 printfn "%A" (Async.RunSynchronously asyncFour)
 Async.RunSynchronously asyncPrint
 
@@ -206,17 +222,26 @@ Async.RunSynchronously asyncPrints |> ignore // ignore игнорирует ар
 
 // Например, так можно реализовать функцию map, работающую параллельно
 
-let map f xs =
+let parallelMap f xs =
     xs
     |> Seq.map (fun x -> async { return f x } )
     |> Async.Parallel
     |> Async.RunSynchronously
     |> Seq.ofArray
     
-map (( + ) 1) [ 1 .. 10 ] |> Seq.iter (printfn "%A")
+parallelMap (( + ) 1) [ 1 .. 10 ] |> Seq.iter (printfn "%A")
 
 // При выполнении задачи используется пул потоков, так что накладные расходы
 // на создание и переключение потоков в рамках разумного
+
+// Awake : 't Async -> unit - функция запускает вычисление в пуле потоков,
+// не дожидаясь завершения вычисления (даже если основной поток завершает
+// работу)
+Async.Start (async {
+    System.Threading.Thread.Sleep 10000
+    return printfn "Zzz..."
+})
+printfn "Awake"
 
 // Асинхронные вычисления используются для обработки файлов
 
@@ -290,14 +315,21 @@ async.Delay (fun () ->
 // Мы не научимся запускать асинхронные вычисления асинхронно, но реализовать
 // все методы для такого вычисления, чтобы работал синтаксис выше, сможем
 
+// Представим асинхронное вычисление как ленивое вычисление. Оно также еще
+// не вычислено в момент создания. Отличие в том, что исполняется в том же
+// потоке и в кешировании результата
 type 't Async' = Async' of 't Lazy
 
 type Async'Builder () =
-    member this.Delay getAsync = getAsync () : 'a Async'
+    member this.Delay getAsync =
+        Async' (lazy match getAsync () with
+                     | Async' comp -> comp.Force())
     
     member this.Bind (compAndCont : 'a Async' * ('a -> 'b Async')) =
-        match fst compAndCont with
-        | Async' comp -> snd compAndCont (comp.Force ())
+        Async' (lazy match fst compAndCont with
+                     | Async' comp ->
+                         match snd compAndCont (comp.Force ()) with
+                         | Async' comp' -> comp'.Force())
   
     member this.Return x = Async' (lazy x)
     
@@ -306,13 +338,18 @@ let async' = Async'Builder ()
 let async'Read _ = Async' (lazy ())
 let async'Write _ _ = Async' (lazy ())
 
-async' {
+let runAsync' = function
+| Async' comp -> comp.Force ()
+
+let async'Process = async' {
     let! image = async'Read "source.jpg"
     let result = processFile image
     do! async'Write "destination.jpg" result
     do printfn "Done"
     return result
-} |> ignore
+}
+
+runAsync' async'Process
 
 // В чем вообще смысл слов let!, do, do!, return, return!, yield, yield!, а
 // также match!
@@ -328,12 +365,12 @@ async' {
 // * return (expr : 't) - завершить описание вычислительного выражения, оно в
 //   итоге вернет значение expr, обернутое в тип результата вычилительного
 //   выражения
-// * return (compExpr : 't Comp) - вернуть тот же результат, что и
+// * return! (compExpr : 't Comp) - вернуть тот же результат, что и
 //   вычислительное выражение compExpr
 // * yield (expr : 't) - выдать наружу значение expr, но не завершать
 //   вычисление
 // * yield! (compExpr : 't Comp) - выдать наружу результаты, выдываемые
 //   вычислительным выражением compExpr, при этом не завершая вычисление
-// * match! (compExpr : 't Comp) wit ... - синтаксический сахар для записи
+// * match! (compExpr : 't Comp) with ... - синтаксический сахар для записи
 //   let! x = compExpr
 //   match x with ...
