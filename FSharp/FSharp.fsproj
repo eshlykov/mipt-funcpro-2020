@@ -5,11 +5,11 @@
     <PropertyGroup>
         <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
         <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-        <ProjectGuid>{AEEFD4C3-BF54-46B8-B415-4540E8E9D968}</ProjectGuid>
+        <ProjectGuid>{779AA83B-B184-48B3-B37A-ADCB9F69EED0}</ProjectGuid>
         <OutputType>Exe</OutputType>
-        <RootNamespace>Seminars</RootNamespace>
-        <AssemblyName>Seminars</AssemblyName>
-        <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+        <RootNamespace>FSharp</RootNamespace>
+        <AssemblyName>FSharp</AssemblyName>
+        <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <DocumentationFile>bin\$(Configuration)\$(AssemblyName).xml</DocumentationFile>
     </PropertyGroup>

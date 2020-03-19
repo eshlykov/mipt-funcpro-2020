@@ -1,4 +1,4 @@
-﻿namespace Seminars.AssemblyInfo
+﻿namespace FSharp.AssemblyInfo
 
 open System.Reflection
 open System.Runtime.CompilerServices
@@ -7,11 +7,11 @@ open System.Runtime.InteropServices
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[<assembly: AssemblyTitle("Seminars")>]
+[<assembly: AssemblyTitle("FSharp")>]
 [<assembly: AssemblyDescription("")>]
 [<assembly: AssemblyConfiguration("")>]
 [<assembly: AssemblyCompany("")>]
-[<assembly: AssemblyProduct("Seminars")>]
+[<assembly: AssemblyProduct("FSharp")>]
 [<assembly: AssemblyCopyright("Copyright ©  $year$")>]
 [<assembly: AssemblyTrademark("")>]
 [<assembly: AssemblyCulture("")>]
@@ -22,7 +22,7 @@ open System.Runtime.InteropServices
 [<assembly: ComVisible(false)>]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[<assembly: Guid("AEEFD4C3-BF54-46B8-B415-4540E8E9D968")>]
+[<assembly: Guid("779AA83B-B184-48B3-B37A-ADCB9F69EED0")>]
 
 // Version information for an assembly consists of the following four values:
 // 
