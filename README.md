@@ -18,8 +18,9 @@
 
 * [Система оценивания](scoring.md)
 * [План курса](plan.md)
-* [Код с семинаров](Seminars/)
+* Код с семинаров: [F#](FSharp/), [Haskell](Haskell/)
 * [Домашние задания](contests.md)
+* [Рекомендации по коду](issues.md)
 * [Стайл-гайды](style-guide.md)
 * [Окружение](environment.md)
 * [Семинарские тесты](tests.md)
