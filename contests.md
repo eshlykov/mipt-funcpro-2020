@@ -18,7 +18,7 @@
 * https://www.hackerrank.com/mipt-funcpro-2020-contest-02 — до 13.03, 23:59
 * https://www.hackerrank.com/mipt-funcpro-2020-contest-03 — до 20.03, 23:59
 * https://www.hackerrank.com/mipt-funcpro-2020-contest-04 — до 27.03, 23:59 (продлен до 28.03, 15:00)
-* https://www.hackerrank.com/mipt-funcpro-2020-contest-05 — до 03.04, 23:59
+* https://www.hackerrank.com/mipt-funcpro-2020-contest-05 — до 03.04, 23:59 (продлен до 10.04, 23:59)
 * https://www.hackerrank.com/mipt-funcpro-2020-contest-06
 * https://www.hackerrank.com/mipt-funcpro-2020-contest-07
 * https://www.hackerrank.com/mipt-funcpro-2020-contest-08
