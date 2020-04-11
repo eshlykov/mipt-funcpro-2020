@@ -355,7 +355,7 @@ concatenate :: [a] -> [a] -> [a]
 concatenate xs ys = xs ++ ys
 
 -- Пустой список записывается как [] (список без элементов), но тип его
--- элементов - любой
+-- элементов - любой.
 emptyList = [] :: [a]
 
 -- С помощью пустого списка и оператора двоеточия можно перезаписать любой:
@@ -647,9 +647,9 @@ pairSum p = let (x, y) = p in x + y
 fibonacciWhere :: Integer -> Integer
 fibonacciWhere n | n >= 0    = helper 0 1 n
                  | otherwise = error "`fibonacci n` requires `n >= 0`"
-  where
-    helper prev _    0 = prev
-    helper prev curr n = helper curr (prev + curr) (n - 1)
+    where
+        helper prev _    0 = prev
+        helper prev curr n = helper curr (prev + curr) (n - 1)
 
 -- Для локальных связываний типы обычно не указывают. Как праивило, они понятны,
 -- так как в них подставляют либо литералы, типы которых очевидны, либо
