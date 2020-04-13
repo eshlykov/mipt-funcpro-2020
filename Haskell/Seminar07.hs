@@ -884,7 +884,7 @@ data Either a b = Left a | Right b deriving Prelude.Show -- Prelude.Either
 -- впоследствии сможем обработать (а не как с error).
 
 -- Для типа Either есть вспомонательная функция either по аналогии с maybe:
-either :: (a -> c) -> (b -> c) -> Either a b -> c
+either :: (a -> c) -> (b -> c) -> Either a b -> c -- Prelude.either
 either f _ (Left a)  = f a
 either _ g (Right b) = g b
 
@@ -930,5 +930,4 @@ evenUpTo6 = 2 :+ 4 :+ 6 :+ Nil :: List Int
 -- (->) Char Char :: *
 
 -- Кайнды допускают также "функциональные" аргументы:
-data HigherKinded k = HigherKinded (k Char)
--- HigherKinded :: (* -> *) -> *
+newtype MaybeT m a = MaybeT { runMaybeT :: m (Maybe a) } -- :: (* -> *) -> *
