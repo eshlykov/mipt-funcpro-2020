@@ -605,13 +605,13 @@ class (Num a, Ord a) => Real a where -- Prelude.Real
 
 -- Для вещественных чисел есть класс типов Fractional, содержащий привычное
 -- деление.
-class (Num a) => Fractional a where -- Prelude.Fractional
+class Num a => Fractional a where -- Prelude.Fractional
     (/)          :: a -> a -> a
     -- Что-то еще...
 
 -- Этот класс расширяет класс типов Floating, которые содержит всю стандартные
 -- математические функции и константу pi.
-class (Fractional a) => Floating a where -- Prelude.Floating
+class Fractional a => Floating a where -- Prelude.Floating
     pi                  :: a
     exp, log, sqrt      :: a -> a
     (**), logBase       :: a -> a -> a
