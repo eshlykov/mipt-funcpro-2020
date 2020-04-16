@@ -22,3 +22,4 @@
 * https://www.hackerrank.com/mipt-funcpro-2020-contest-06
 * https://www.hackerrank.com/mipt-funcpro-2020-contest-07
 * https://www.hackerrank.com/mipt-funcpro-2020-contest-08
+* https://www.hackerrank.com/mipt-funcpro-2020-contest-09
