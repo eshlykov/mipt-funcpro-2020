@@ -824,8 +824,8 @@ ignoreData (Data _) = ()
 ignoreNewType :: NewType -> ()
 ignoreNewType (NewType _) = ()
 
-emptyTuple = ignoreNewType undefined
-errorUndefined () = ignoreData undefined
+emptyTuple     = ignoreNewType undefined
+errorUndefined = ignoreData undefined
 
 -- Поскольку конструктор типов один, то его можно игнорировать при сопоставлении
 -- с образцом, поэтому фактически здесь (NewType _) - неопровержимый образец.
