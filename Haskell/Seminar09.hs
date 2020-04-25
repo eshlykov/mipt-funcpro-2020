@@ -356,7 +356,7 @@ _ = Nothing    <*> Nothing `is` Nothing
 -- Но на всякий случай убедимся в выполнении всех законов для Applicative Maybe:
 
 -- 1. pure id <*> xs = xs -- Identity
-_ = \ x -> pure id <*> Just x `is` Just id <*> Just x
+_ = \ x -> pure id <*> Just x `is` Just id <*> Just x `is` Just x
 _ =        pure id <*> Nothing `is` Nothing
 
 -- 2. pure f <*> pure x = pure (f x) -- Homomorphism
@@ -400,7 +400,7 @@ _ = \ ex -> pure id <*> Left ex `is` Right id <*> Left ex `is` Left ex
 -- Эти законы доказываются точно так же, как и для Maybe, только с заменой
 -- Just на Right. Рассмотрим только третий закон для случая, когда fs - Left ef.
 _ = \ ef x -> Left ef <*> pure x `is` Left ef
-_ = \ ef x -> pure ($ x) <*> Left ef `is` Left ef
+_ = \ ef x -> pure ($ x) <*> Left ef `is` Right ($ x) <*> Left ef `is` Left ef
 
 -- 4. pure (.) <*> fs <*> gs <*> xs = fs <*> (gs <*> xs) -- Composition
 -- Этот закон в случае, когда все fs, gs, xs - Right, доказывается, как в случае
@@ -419,7 +419,7 @@ _ = \ ef eg ex -> Left ef <*> (Left eg <*> Left ex) `is` Left ef
 
 -- В случае с парой будем работать чуть менее абстрактно, в качестве первого
 -- элемента будем брать строки:
-_ = pure True             `is` ("", True)
+_ = pure True                 `is` ("", True)
 _ = ("f", (^ 2)) <*> ("x", 3) `is` ("fx", 9)
 
 -- 1. pure id <*> xs = xs -- Identity
@@ -460,7 +460,7 @@ _ = \ f -> pure id <*> f `is` const id <*> f `is` (\ e -> const id e (f e)) `is`
 
 -- 2. pure f <*> pure x = pure (f x) -- Homomorphism
 _ = \ f x -> pure f <*> pure x `is` const f <*> const x `is`
-               (\ e -> const f e (const x e)) `is` (\ _ -> f x) `is` const (f x)
+             (\ e -> const f e (const x e)) `is` (\ _ -> f x) `is` const (f x)
 
 _ = \ f x -> pure (f x) `is` const (f x)
 
@@ -482,17 +482,19 @@ _ = \ f3 f2 f1 -> pure (.) <*> f3 <*> f2 <*> f1 `is`
                   (\ e'' -> (\ e' -> (.) (f3 e') (f2 e')) e'' (f1 e'')) `is`
                   (\ e'' -> (.) (f3 e'') (f2 e'') (f1 e'')) `is`
                   (\ e'' -> f3 e'' (f2 e'' (f1 e'')))
+                  (\ e -> f3 e (f2 e (f1 e)))
 
 _ = \ f3 f2 f1 -> f3 <*> (f2 <*> f1) `is` f3 <*> (\ e -> f2 e (f1 e)) `is`
                   (\ e' -> f3 e' ((\ e -> f2 e (f1 e)) e')) `is`
                   (\ e' -> f3 e' (f2 e' (f1 e')))
+                  (\ e -> f3 e (f2 e (f1 e)))
 
 --------------------------------------------------------------------------------
 -- СПИСКИ КАК АППЛИКАТИВНЫЕ ФУНКТОРЫ
 
 -- Наконец, самое сложное - это аппликативный функтор из списка.
 _ = pure True                     `is` [True]
-_ = [(^2), (^3), (^4)] <*> [2, 3] `is` [4, 9, 8, 27, 16, 81]
+_ = [(^ 2), (^ 3), (^ 4)] <*> [2, 3] `is` [4, 9, 8, 27, 16, 81]
 
 -- 1. pure id <*> xs = xs -- Identity
 _ = \ xs -> pure id <*> xs `is` [id] <*> xs `is` [f x | f <- [id], x <- xs] `is`
@@ -513,7 +515,7 @@ _ = \ fs x -> pure ($ x) <*> fs `is` [($ x)] <*> fs `is`
 -- 4. pure (.) <*> fs <*> gs <*> xs = fs <*> (gs <*> xs) -- Composition
 _ = \ fs gs xs -> pure (.) <*> fs <*> gs <*> xs `is`
                   [(.)] <*> fs <*> gs <*> xs `is`
-                  [f . g | f <- fs, g <- fs] <*> xs `is`
+                  [f . g | f <- fs, g <- gs] <*> xs `is`
                   [h x | h <- [f . g | f <- fs, g <- gs], x <- xs] `is`
                   [f (g x) | f <- fs, g <- gs, x <- xs]
 _ = \ fs gs xs -> fs <*> (gs <*> xs) `is` fs <*> [g x | g <- gs, x <- xs] `is`
@@ -548,7 +550,7 @@ _ = liftA2 (+) (^ 2) (^ 3) 2 `is` 12
 _ = liftA2 (+) [3, 2, 1] [1, 2] `is` [4, 5, 3, 4, 2, 3]
 
 -- Также теперь понятна дефолтная реализация (<*>) - liftA2 id. Действительно,
--- раньше мы делали буквально следующие.
+-- раньше мы делали буквально следующие (общая схема liftA2):
 _ = \ f2 x y -> liftA2 f2 (Just x) (Just y) `is` Just (f2 x y)
 -- Аналогично и сейчас:
 _ = liftA2 id (Just (^ 2)) (Just 3) `is` Just (id (^2) 3) `is` Just 9
@@ -571,7 +573,7 @@ liftA3 f xs ys zs = f <$> xs <*> ys <*> zs
 -- аппликативных функторов.
 
 -- Для начала вспомним усеченные версии функции fmap, которые мы упоминали,
--- когда говорили об аппликативных функторах:
+-- когда говорили о функторах:
 _ = [1, 2, 3] $> 4 `is` [4, 4, 4]
 _ = 4 <$ [1, 2, 3] `is` [4, 4, 4]
 
@@ -590,8 +592,8 @@ _ = (+ 4)      $> EQ        `is` const EQ
 -- один из аргументов отбрасывается.
 
 -- Рассмотрим дефолтную реализацию:
---(<*) :: f a -> f b -> f a
---(<*) = liftA2 const
+(<*) :: f a -> f b -> f a
+(<*) = liftA2 const
 -- Именно благодаря liftA2 структура контейнера меняется. Мы могли бы написать
 -- просто const, и по типу бы все сходилось, но тогда мы просто игнорировали
 -- второй контейнер, а здесь его структура влияет на результат. Но не значения!
@@ -652,13 +654,13 @@ tAp3 :: Applicative f => f a -> f b -> f b
 tAp3 = liftA2 (flip const)
 
 -- Но в библиотеке реализация все равно другая:
---(*>) :: Applicative f => f a -> f b -> f b
---as *> bs = id <$ as <*> bs
+(*>) :: Applicative f => f a -> f b -> f b
+as *> bs = id <$ as <*> bs
 
 -- Как же так произошло? Разработчики библиотеки сделали наблюдение:
 -- * liftA2 (flip const) xs ys =
 -- = flip const <$> xs <*> ys =
--- = fmap (\ _ x -> x) xs <*> ys =
+-- = fmap (\ _ y -> y) xs <*> ys =
 -- = | Получаем слева контейнер то же структуры, но из функций id! | =
 -- = | Но по определению это просто (<$) из функтора. | =
 -- = id <$ xs <*> ys, что и требовалось.
@@ -821,7 +823,7 @@ _ = asum [[1, 2], [3]] `is` [1, 2, 3]
 -- :: f a -> f () -> f (). Это же усеченный оператор аппликации!
 sequenceA_ :: (Foldable t, Applicative f) => t (f a) -> f ()
 sequenceA_ = foldr (*>) (pure ())
--- То есть мы делаем свертку по контейнеру, которая на каждом шаге забывает
+-- То есть мы делаем свертку по контейнеру, которая на каждом шаге забываем
 -- значения, но сохраняет и аккумулирует все эффекты.
 
 -- Таким образом, мы заменили (<|>) на (*>), а empty на pure (), но получили
@@ -981,16 +983,21 @@ instance Functor Identity where
 
 instance Applicative Identity where
     pure x = Identity x
-    Identity f <*> Identity x = Identity (f x)
+    Identity f <*>  Identity x = Identity (f x)
 
--- Compose :: (* -> *) -> (* -> *) -> * оборачивает композицию на уровне типов.
+-- Compose :: (* -> *) -> (* -> *) -> * -> * оборачивает композицию на уровне
+-- типов.
 newtype Compose f g a = Compose (f (g a)) deriving Show
 
 instance (Functor f, Functor g) => Functor (Compose f g) where
+    fmap :: (a -> b) -> Compose f g a -> Compose f g b
     fmap f (Compose x) = Compose (fmap (fmap f) x)
 
 instance (Applicative f, Applicative g) => Applicative (Compose f g) where
+    pure x :: Compose f g a
     pure x = Compose (pure (pure x))
+
+    (<*>) :: Compose f g (a -> b) -> Compose f g a -> Compose f g b
     Compose f <*> Compose x = Compose ((<*>) <$> f <*> x)
 
 -- Compose нужен, чтобы проносить, функции через несколько контейнеров:
@@ -1020,7 +1027,6 @@ _ = Compose [Just (^ 2), Nothing] <*> Compose [Just 2, Just 3] `is`
 -- Доказывать формально не будем, воспользуемся методом "доказательство
 -- примером" (никогда так не делайте):
 _ = traverse Identity [2, 3] `is`
-    foldr (\ x ays -> liftA2 (:) (pure x) ays) (pure []) [2, 3] `is`
     foldr (\ x ays -> liftA2 (:) (Identity x) ays) (pure []) [2, 3] `is`
     foldr (\ x (Identity ys) -> Identity (x : ys)) (pure []) [2, 3] `is`
 
