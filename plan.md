@@ -202,3 +202,4 @@
 * Типы Identity и Compose
 * Законы для Traversable: Identity
 * Законы для Traversable: Composition
+* Другие законы для Traversable
