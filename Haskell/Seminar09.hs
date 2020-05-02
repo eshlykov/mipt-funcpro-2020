@@ -171,7 +171,7 @@ instance Functor ((->) e) where
 -- разве что fmap f :: f a -> f (b -> c).
 
 -- На самом деле это важный шаг к тому, чего мы хотим. Теперь понятно, что если
--- реализовать функцию ap :: f (b -> c) -> f b -> f c, то мы получим как раз  то,
+-- реализовать функцию ap :: f (b -> c) -> f b -> f c, то мы получим как раз то,
 -- что хотели: ap . fmap f :: f a -> f b -> f c. Более того, с ее помощью делать
 -- обобщение на функции большего числа аргументов.
 
@@ -481,12 +481,12 @@ _ = \ f3 f2 f1 -> pure (.) <*> f3 <*> f2 <*> f1 `is`
                   (\ e' -> (.) (f3 e') (f2 e')) <*> f1 `is`
                   (\ e'' -> (\ e' -> (.) (f3 e') (f2 e')) e'' (f1 e'')) `is`
                   (\ e'' -> (.) (f3 e'') (f2 e'') (f1 e'')) `is`
-                  (\ e'' -> f3 e'' (f2 e'' (f1 e'')))
+                  (\ e'' -> f3 e'' (f2 e'' (f1 e''))) `is`
                   (\ e -> f3 e (f2 e (f1 e)))
 
 _ = \ f3 f2 f1 -> f3 <*> (f2 <*> f1) `is` f3 <*> (\ e -> f2 e (f1 e)) `is`
                   (\ e' -> f3 e' ((\ e -> f2 e (f1 e)) e')) `is`
-                  (\ e' -> f3 e' (f2 e' (f1 e')))
+                  (\ e' -> f3 e' (f2 e' (f1 e'))) `is`
                   (\ e -> f3 e (f2 e (f1 e)))
 
 --------------------------------------------------------------------------------
@@ -592,8 +592,8 @@ _ = (+ 4)      $> EQ        `is` const EQ
 -- один из аргументов отбрасывается.
 
 -- Рассмотрим дефолтную реализацию:
-(<*) :: f a -> f b -> f a
-(<*) = liftA2 const
+--(<*) :: f a -> f b -> f a
+--(<*) = liftA2 const
 -- Именно благодаря liftA2 структура контейнера меняется. Мы могли бы написать
 -- просто const, и по типу бы все сходилось, но тогда мы просто игнорировали
 -- второй контейнер, а здесь его структура влияет на результат. Но не значения!
@@ -654,8 +654,8 @@ tAp3 :: Applicative f => f a -> f b -> f b
 tAp3 = liftA2 (flip const)
 
 -- Но в библиотеке реализация все равно другая:
-(*>) :: Applicative f => f a -> f b -> f b
-as *> bs = id <$ as <*> bs
+--(*>) :: Applicative f => f a -> f b -> f b
+--as *> bs = id <$ as <*> bs
 
 -- Как же так произошло? Разработчики библиотеки сделали наблюдение:
 -- * liftA2 (flip const) xs ys =
@@ -994,7 +994,7 @@ instance (Functor f, Functor g) => Functor (Compose f g) where
     fmap f (Compose x) = Compose (fmap (fmap f) x)
 
 instance (Applicative f, Applicative g) => Applicative (Compose f g) where
-    pure x :: Compose f g a
+    pure :: a -> Compose f g a
     pure x = Compose (pure (pure x))
 
     (<*>) :: Compose f g (a -> b) -> Compose f g a -> Compose f g b
