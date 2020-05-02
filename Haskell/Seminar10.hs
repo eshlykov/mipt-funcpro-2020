@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 
 module Seminar10 where
@@ -78,7 +79,7 @@ fatherOfFatherOfMother'v2 s = mother s `bind` father `bind` father
 --------------------------------------------------------------------------------
 -- КЛАСС ТИПОВ MONAD
 
--- В Haskell монада - это расширение понятие аппликативного функтора.
+-- В Haskell монада - это расширение понятие аппликативного функтора,
 -- для создания монады надо имет всего две вещи:
 -- 1. аппликативный функтор;
 -- 2. оператор монадического связывания.
@@ -110,7 +111,7 @@ class Applicative m => Monad m where
 -- иметь разные типы.
 
 -- Кроме того, есть оператор bind с переставленными местами аргументами:
-(=<<) :: Monad m => (a -> m b) -> m a -> m b
+(=<<) :: Monad m => (a -> m b) -> m a -> m b -- Control.Monad.
 (=<<) = flip (>>=)
 infixr 1 =<<
 
@@ -123,7 +124,7 @@ infixr 1 =<<
 -- интерфейс монады:
 fatherOfFatherOfMother'v3 :: Sheep -> Maybe Sheep
 fatherOfFatherOfMother'v3 s = do
-    m <- mother s
+    m <- mother s -- (x :: a) <- (mx :: m a)
     fm <- father m
     ffm <- father fm
     return ffm
@@ -193,7 +194,7 @@ makeKleisli f = return . f
 
 -- Так как монады являются аппликативными функторами, то нельзя
 -- не вспомнить о классе типов Alternative, который представлял моноид на
--- аппликативных фукторах. Оказываетсяб, MonadPlus расширяет и Alternative тоже.
+-- аппликативных фукторах. Оказывается, MonadPlus расширяет и Alternative тоже.
 -- Более того, операция и нейтральный элемент имеют из него реализацию по
 -- умолчанию.
 
@@ -272,7 +273,7 @@ data Maybe' a = Nothing' | Just' a deriving Show
 instance Functor Maybe' where
     fmap :: (a -> b) -> Maybe' a -> Maybe' b
     fmap f (Just' x) = Just' $ f x
-    fmap f Nothing'  = Nothing'
+    fmap _ Nothing'  = Nothing'
     -- fmap f = maybe Nothing (Just . f)
 
 instance Applicative Maybe' where
@@ -288,7 +289,7 @@ instance Applicative Maybe' where
 instance Monad Maybe' where
     (>>=) :: Maybe' a -> (a -> Maybe' b) -> Maybe' b
     Just' x >>= k = k x
-    _      >>= _  = Nothing'
+    _       >>= _ = Nothing'
     -- mx >>= k maybe Nothing k mx
 
 -- Maybe также является и MonadPlus:
@@ -400,6 +401,7 @@ getSqrt x | x >= 0    = Right $ sqrt x
 
 -- Список тоже придется перереализовать:
 data List a = Nil | a :+ List a deriving Show
+infixr 5 :+
 
 -- Чтобы писать list comprehension, нужно использовать списки. У нас есть
 -- функция toList, которую можно достать из класса типов Foldable:
@@ -466,11 +468,11 @@ solveX2 x | x > 0     = let r = sqrt x in [r, -r]
 -- Но оказывается, в классе типов Traversable по историческим причинам объявлены
 -- еще две функции:
 
---sequence :: (Traversable t, Monad m) => (a -> m b) -> t a -> m b
---sequence = sequenceA
-
---mapM :: (Traversable t, Monad m) => t (m a) -> m (t a)
+--mapM :: (Traversable t, Monad m) => (a -> m b) -> t a -> m b
 --mapM = traverse
+
+--sequence :: (Traversable t, Monad m) => t (m a) -> m (t a)
+--sequence = sequenceA
 
 -- Дело в том, что раньше монады и аппликативные функторы были не связанными
 -- классами типов, поэтому присутствуют версии для обоих классов типов. Но зато
@@ -478,8 +480,8 @@ solveX2 x | x > 0     = let r = sqrt x in [r, -r]
 -- sequence, то это можно сделать явно.
 
 -- Также есть версии для монад, но с отбрасыванием значений:
--- * sequence_ :: (Traversable t, Monad m) => (a -> m b) -> t a -> m ()
--- * mapM_ ::  (Traversable t, Monad m) => t (m a) -> m ()
+-- * sequence_ ::  (Traversable t, Monad m) => t (m a) -> m ()
+-- * mapM_ :: (Traversable t, Monad m) => (a -> m b) -> t a -> m ()
 
 -- Кроме того, в модуле Control.Monad есть и другие полезные функции:
 -- * forM :: (Traversable t, Monad m) => t a -> (a -> m b) -> m (t b)
@@ -536,7 +538,8 @@ instance Monad (State s) where
     (>>=) :: State s a -> (a -> State s b) -> State s b
     mx >>= k = State $ \ s -> let
             (x, s') = runState mx s
-        in runState (k x) s'
+            (y, s'') = runState (k x) s'
+        in (y, s'')
 
 -- return, или pure, устанавливает значение, но оставляет результат неизменным,
 -- а bind меняет состояние и отдает его в следующее результат.
@@ -608,7 +611,8 @@ instance Monad (Reader e) where
     (>>=) :: Reader e a -> (a -> Reader e b) -> Reader e b
     mx >>= k = Reader $ \ e -> let
             x = runReader mx e
-        in runReader (k x) e
+            y = runReader (k x) e
+        in y
 
 --------------------------------------------------------------------------------
 -- ПРЕОБРАЗОВАНИЕ STATE К READER
@@ -730,7 +734,10 @@ shopping :: Shopping
 shopping = do
     purchase "Jeans" 19200
     purchase "Water" 180
-    purchase "Lettuce" 328
+    purchase "Apple" 328
+
+-- total shopping = 19708
+-- items shopping = ["Jeans", "Water", "Apple"]
 
 -- Тогда мы можем получать как список покупок, так и общую сумму вырученных
 -- денег:
@@ -742,9 +749,6 @@ total = getSum . snd . execWriter
 
 items :: Shopping -> [String]
 items = fst . execWriter
-
--- total shopping = 19708
--- items shopping = ["Jeans", "Water", "Lettuce"]
 
 ------------------------------------------------------------------------------
 -- МОНАДА IO
@@ -775,7 +779,7 @@ items = fst . execWriter
 -- putStr :: String -> IO ()
 
 -- Записать строку с переводом строки.
--- putStrLn':: String -> IO ()
+-- putStrLn :: String -> IO ()
 -- putStrLn s = putStr s >> putChar '\n'
 
 -- Прочитать 1 строку до перевода строки.
@@ -788,22 +792,14 @@ items = fst . execWriter
 -- getContents :: IO String
 
 -- Прочитать все содержимое, применить к нему функцию и вывести результат.
--- interact' :: (String -> String) -> IO ()
--- interact' f = getContents >>= return . f >>= putStr
+-- interact :: (String -> String) -> IO ()
+-- interact f = getContents >>= makeKleisli f >>= putStr
 
 -- Функции для работы с файлами:
 -- * readFile :: FilePath -> IO String
 -- * writeFile :: FilePath -> String -> IO ()
 -- * appendFile :: FilePath -> String -> IO ()
 -- FilePath - алиас на String.
-
--- Чтение из строки с результатом отправки ошибки парсинга в консоль (обычно
--- программа аварийно завершается).
--- readIO :: Read a => String -> IO a
-
--- Комбинирует getLine и readIO.
--- readLn :: Read a => IO ()
--- readLn = getLine >>= readIO
 
 --------------------------------------------------------------------------------
 -- СОПОСТАВЛЕНИЕ С ОБРАЗЦОМ В DO-НОТАЦИИ
@@ -829,16 +825,15 @@ pifs'v1 = do
 --------------------------------------------------------------------------------
 -- КЛАСС ТИПОВ MONADFAIL
 
-
-class Monad m => MonadFail' m where
-    fail' :: String -> m a
+--class Monad m => MonadFail m where
+--    fail :: String -> m a
 
 -- Смысл функции fail в том, что мы можем восстановиться от произошедшей ошибки
 -- (ее текст передается в аргумент) и продолжить вычисление. Саму ошибку в этом
 -- случае можно игнорировать.
 
 -- Для класса типов должен быть выполнен всего один закон: fail должен быть
--- левым нейтральным элементом для монадического связывания:
+-- левым поглощающим элементом для монадического связывания:
 -- * fail s >>= mx = fail s
 
 --------------------------------------------------------------------------------
@@ -858,6 +853,14 @@ instance MonadFail Maybe' where
 
 -- Таким образом, сопоставление с образцом доступно только в монадах списка и
 -- Maybe.  Также есть реализация для IO, она выводит строку на консоль.
+
+-- Можно реализовать MonadFail для Either String, чтобы выдавать сообщение
+-- ошибки в Left. Потребуется расширение FlexibleInstances, так как по
+-- умолчанию требуется, чтобы типы имели вид T x1 ... xN, где x1, ..., xN -
+-- разные переменные типов.
+instance MonadFail (Either String) where
+    fail :: String -> Either String a
+    fail = Left
 
 --------------------------------------------------------------------------------
 -- ФУНКЦИЯ GUARD
