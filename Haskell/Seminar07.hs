@@ -9,7 +9,7 @@ import qualified Prelude
 -- библиотекой.
 
 -- Все содержимое модуля Prelude можно найти здесь:
--- https://gitlab.haskell.org/ghc/ghc/-/blob/master/libraries/base/Prelude.hs
+-- https://gitlab.haskell.org/ghc/ghc/-/blob/ghc-8.8.2-release/libraries/base/Prelude.hs
 
 --------------------------------------------------------------------------------
 -- ЧИСЛОВЫЕ ТИПЫ
