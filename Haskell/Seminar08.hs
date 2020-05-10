@@ -587,7 +587,7 @@ instance Monoid [a] where mempty = []
 
 instance Monoid b => Monoid (a -> b) where mempty _ = mempty
 
-instance Monoid a => Monoid (Maybe a) where mempty = Nothing
+instance Semigroup a => Monoid (Maybe a) where mempty = Nothing
 
 instance Monoid () where mempty = ()
 
