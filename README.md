@@ -18,9 +18,11 @@
 
 * [Система оценивания](scoring.md)
 * [План курса](plan.md)
-* Код с семинаров: [F#](FSharp/), [Haskell](Haskell/)
+* [Семинары на F#](FSharp/)
+* [Семинары на Haskell](Haskell/)
 * [Домашние задания](contests.md)
 * [Рекомендации по коду](issues.md)
 * [Окружение](environment.md)
 * [Семинарские тесты](tests.md)
-* [Теоретическом зачете](exam-theory.md)
+* [Зачет по теории](exam-theory.md)
+* [Зачет по практике](https://github.com/eshlykov/mipt-funcpro-2020-exam-practice)
