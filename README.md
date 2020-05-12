@@ -25,4 +25,4 @@
 * [Окружение](environment.md)
 * [Семинарские тесты](tests.md)
 * [Зачет по теории](exam-theory.md)
-* [Зачет по практике](https://github.com/eshlykov/mipt-funcpro-2020-exam-practice)
+* [Зачет по практике](exam-practice/)
