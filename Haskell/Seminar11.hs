@@ -64,8 +64,8 @@ instance (Functor f, Functor g) => Functor (Compose f g) where
 -- = fmap h2 (fmap h1 (Compose x)) =               - конструктор Compose
 -- = fmap h2 (Compose (fmap (fmap h1) x)) =        - опредеделение fmap
 -- = Compose (fmap (fmap h2) (fmap (fmap h1) x)) = - определение fmap
--- = Compose (fmap (fmap h2 . fmap h1) x) =        - закон для g
--- = Compose (fmap (fmap (h2 . h1)) x) =           - закон для f
+-- = Compose (fmap (fmap h2 . fmap h1) x) =        - закон для f
+-- = Compose (fmap (fmap (h2 . h1)) x) =           - закон для g
 -- = fmap (h2 . h1) (Compose x) =                  - определение fmap
 -- = fmap (h2 . h1) y
 
@@ -253,7 +253,7 @@ instance Monad m => Monad (ReaderT r m) where
     (>>=) :: ReaderT r m a -> (a -> ReaderT r m b) -> ReaderT r m b
     rx >>= k = ReaderT $ \ e -> do -- Вычисление в произвольной монаде m!
         x <- runReaderT rx e       -- runReaderT rx e :: m a => x :: a
-        runReaderT (k x) e        -- :: m b
+        runReaderT (k x) e         -- :: m b
 
 _ = runReaderT (rx >>= k) 2 `is` [5, 6, 6, 8] where
     rx = ReaderT $ \ e -> [e + 1, e * 2]
@@ -405,7 +405,7 @@ instance Functor m => Functor (WriterT w m) where
         -- с образцом называется strict writer.
 
 _ = runWriterT (fmap (+ 1) wt) `is` [(2, "a"), (3, "b")] where
-    wt = WriterT $ [(1, "a"), (2, "b")]
+    wt = WriterT [(1, "a"), (2, "b")]
 
 --------------------------------------------------------------------------------
 -- АППЛИКАТИВНЫЙ ФУНКТОР WRITERT
@@ -420,8 +420,8 @@ instance (Monoid w, Applicative m) => Applicative (WriterT w m) where
 
 _ = runWriterT (wf <*> wx) `is`
     [(1, "f1x1"), (2, "f1x2"), (3, "f2x1"), (4, "f2x2")] where
-        wf = WriterT $ [(fst, "f1"), (snd, "f2")]
-        wx = WriterT $ [((1, 3), "x1"), ((2, 4), "x2")]
+        wf = WriterT [(fst, "f1"), (snd, "f2")]
+        wx = WriterT [((1, 3), "x1"), ((2, 4), "x2")]
 
 --------------------------------------------------------------------------------
 -- МОНАДА WRITERT
@@ -437,9 +437,9 @@ instance (Monoid w, Monad m) => Monad (WriterT w m) where
 -- произвольной монады m.
 
 _ = runWriterT (wx >>= k) `is`
-    [(2, "x1y1"), (3, "x1y2"), (4, "x2y1"), (6, "x2y2")] where
-        wx = WriterT $ [(1, "x1"), (2, "x2")]
-        k x = WriterT $ [(x * 2, "y1"), (x * 3, "y2")]
+    [(2, "1*2"), (3, "1*3"), (4, "2*2"), (6, "2*3")] where
+        wx = WriterT $ [(1, "1"), (2, "2")]
+        k x = WriterT $ [(x * 2, "*2"), (x * 3, "*3")]
 
 --------------------------------------------------------------------------------
 -- ТРАНСФОРМЕР WRITERT
@@ -535,7 +535,7 @@ instance Monad m => Applicative (StateT s m) where
 
 instance Monad m => Monad (StateT s m) where
   (>>=) :: StateT s m a -> (a -> StateT s m b) -> StateT s m b
-  mx >>= k  = StateT $ \ s -> do
+  mx >>= k = StateT $ \ s -> do
     ~(x, s') <- runStateT mx s
     runStateT (k x) s'
 
@@ -569,7 +569,7 @@ modify f = state $ \ s -> ((), f s)
 -- ИНСТАНСЫ MONADFAIL
 
 -- Трансформеры можно легко делать экземплярами MonadFail, если вложенная
--- монада является представителем этого класса типа:
+-- монада является представителем этого класса типа.
 
 instance MonadFail m => MonadFail (ReaderT r m) where
     fail :: String -> ReaderT r m a
@@ -585,8 +585,8 @@ instance MonadFail m => MonadFail (StateT s m) where
 
 _ = runWriterT w `is` [((), "snd")] where
     w = do
-     1 <- WriterT [(0, "fst"), (1, "snd")]
-     return ()
+        1 <- WriterT [(0, "fst"), (1, "snd")]
+        return ()
 -- Там, где сопоставление с образцом не удалось, взялся fail для списка, то есть
 -- пустой список. В лог записано только сообщение из второго элемента, где
 -- сопоставление было успешно.
